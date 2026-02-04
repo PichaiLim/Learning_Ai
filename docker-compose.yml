@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: learning-ai:latest
+    container_name: learning-ai-app
+
+    # Environment variables
+    env_file:
+      - .env
+
+    # Volumes for development (optional - uncomment if needed)
+    # volumes:
+    #   - .:/app
+    #   - /app/__pycache__
+
+    # Keep container running for interactive use
+    stdin_open: true
+    tty: true
+
+    # Restart policy
+    restart: unless-stopped
+    # Network mode (optional)
+    # network_mode: bridge
+
+    # Resource limits (optional)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '2'
+    #       memory: 2G
+    #     reservations:
+    #       cpus: '1'
+    #       memory: 1G
