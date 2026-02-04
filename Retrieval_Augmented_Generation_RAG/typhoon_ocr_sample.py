@@ -50,6 +50,10 @@ class TyphoonOCR:
             api_key=self.api_key
         )
 
+        md_file = os.path.join(os.path.dirname(__file__), 'media/output', 'PDPA_thailand.md')
+        with open(md_file, 'w', encoding='utf-8') as f:
+            f.write(markdown_content)
+
 
         print("Markdown content: ", markdown_content)
 
