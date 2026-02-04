@@ -43,7 +43,7 @@ class TyphoonOCR:
         # print("Document path: ", document_path)
 
         # print("API Key: ", self.api_key)
-        jls_extract_var = document_path#r"C:/Users/Public/Public Programs/Learning_Ai/Retrieval_Augmented_Generation_RAG/media/PDPA_thailand.pdf"
+        jls_extract_var = document_path
         markdown_content = ocr_document(
             pdf_or_image_path=jls_extract_var,
             page_num=1,
