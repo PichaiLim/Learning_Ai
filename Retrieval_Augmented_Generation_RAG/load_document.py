@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from pdf2image import convert_from_path
 load_dotenv()
 
 # ============================================================================
@@ -21,10 +22,17 @@ class LoadDocument:
             return file
         return None
 
+    # TODO: Convert PDF to Image
+    # pdf_path : พาธไฟล์ PDF
+    # output_path : พาธโฟลเดอร์ที่จะบันทึกรูปภาพ
+    # orientation='portrait' : แนวตั้ง
+    # orientation='landscape' : แนวนอน
+    # dpi=300 : ความละเอียด
+    # image_format='JPEG' : รูปแบบไฟล์
     def convert_pdf_to_image(self, pdf_path, output_path, dpi=300, orientation='portrait', image_format='JPEG'):
         images = convert_from_path(pdf_path, dpi=dpi, orientation=orientation)
         for i, image in enumerate(images):
-            image.save(f'{output_path}/images/page_{i+1}.{image_format}', image_format)
+            image.save(f'{output_path}/images/page_{i+1}.{image_format}', image_format.upper())
 
 if __name__ == '__main__':
     load_document = LoadDocument()
