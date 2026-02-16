@@ -35,4 +35,4 @@ if __name__ == "__main__":
     input_file = os.path.join(BASE_DIR, 'Retrieval_Augmented_Generation_RAG', 'media', 'output', 'images', 'page_1.jpg')
     output_file = os.path.join(BASE_DIR, 'Retrieval_Augmented_Generation_RAG', 'media', 'output', 'markdown', 'page_1.md')
     
-process_document_to_markdown(input_file, output_file)
+    process_document_to_markdown(input_file, output_file)
