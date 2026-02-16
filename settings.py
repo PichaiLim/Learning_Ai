@@ -14,9 +14,12 @@ def get_typhoon_ocr_api_key():
 
     """Retrieves the TYPHOON_OCR_API_KEY from environment variables."""
     if os.getenv("TYPHOON_OCR_API_KEY"):
-        print(f"TYPHOON_OCR_API_KEY: {os.getenv("TYPHOON_OCR_API_KEY")}")
+        # print(f"TYPHOON_OCR_API_KEY: {os.getenv("TYPHOON_OCR_API_KEY")}")
+        pass    
     else:
         print("TYPHOON_OCR_API_KEY is not present")
     return os.getenv("TYPHOON_OCR_API_KEY")
 
 typhoon_ocr_api_key = get_typhoon_ocr_api_key()
+
+BASE_DIR = os.path.dirname(__file__)
