@@ -55,3 +55,10 @@ Prompt ที่ดีสำหรับ RAG ควรมี:
 - Retrieval accuracy: ดึงถูกเรื่องไหม
 - Answer faithfulness: ตอบอิง context จริงไหม
 - Latency/Cost: ช้าไปไหม แพงไปไหม
+
+# ขนาด Chunk ควรเท่าไร?
+| Use Case | Recommended |
+| --- | --- |
+| เอกสารทั่วไป | 500–800 tokens |
+| คู่มือเทคนิค | 800–1200 tokens |
+| สลิป / เอกสารสั้น | 200–400 tokens |
