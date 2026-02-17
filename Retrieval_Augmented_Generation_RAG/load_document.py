@@ -66,10 +66,10 @@ class LoadDocument:
         self, 
         pdf_path: str, 
         output_path: str, 
-        dpi: int = 300, 
+        dpi: int = 300,  
         orientation: Literal['portrait', 'landscape'] = 'portrait', 
         image_format: str = 'JPEG'
-    ) -> None:
+    ) -> str:
         """
         Convert PDF to images.
         
@@ -91,13 +91,15 @@ class LoadDocument:
         if self.check_type_original_file(pdf_path) != 'pdf':
             raise ValueError(f"File is not a PDF: {pdf_path}")
         
-        output_dir = Path(output_path) / 'images'
+        output_dir = Path(output_path) / 'images' # media/output/images
         output_dir.mkdir(parents=True, exist_ok=True)
         
-        images = convert_from_path(pdf_path, dpi=dpi, orientation=orientation)
+        images = convert_from_path(pdf_path, dpi=dpi)
         for i, image in enumerate(images, start=1):
             output_file = output_dir / f'page_{i}.{image_format.lower()}'
             image.save(output_file, image_format.upper())
+
+        return output_dir
     
     def convert_image_to_pdf(self, image_path: str, output_path: str) -> None:
         """
@@ -118,17 +120,25 @@ class LoadDocument:
         if self.check_type_original_file(image_path) != 'image':
             raise ValueError(f"File is not an image: {image_path}")
         
-        output_file = Path(output_path)
+        output_file = Path(output_path) # media/output/markdown/raw_markdown/page_1.pdf
         output_file.parent.mkdir(parents=True, exist_ok=True)
         
         with open(output_file, "wb") as f:
             f.write(img2pdf.convert(str(image_file)))
 
+        return output_file
 
-if __name__ == '__main__':
-    load_document = LoadDocument()
-    found_file = load_document.document_in_folder(
-        str(load_document.base_dir), 
-        'PDPA_thailand.pdf'
-    )
-    print(f"Found file: {found_file}")
+
+# TODO Convert Image to Raw Markdown
+
+# if __name__ == '__main__':
+#     load_document = LoadDocument()
+#     found_file = load_document.document_in_folder(
+#         folder_path=str(load_document.base_dir), 
+#         file_name='PDPA_thailand.pdf'
+#     )
+#     print(f"Found file: {found_file}")
+#     load_document.convert_pdf_to_image(
+#         pdf_path=str(load_document.pdf_path),
+#         output_path=str(load_document.output_path)
+#     )
