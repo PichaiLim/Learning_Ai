@@ -4,6 +4,7 @@ from typing import Optional, Literal
 from dotenv import load_dotenv
 from pdf2image import convert_from_path
 import img2pdf
+from typhoon_ocr import ocr_document
 
 load_dotenv()
 
@@ -129,16 +130,49 @@ class LoadDocument:
         return output_file
 
 
-# TODO Convert Image to Raw Markdown
+    
+    def convert_image_to_raw_markdown(self, image_path: str, output_path: str) -> None:
+        """
+        Convert image to raw markdown using OCR.
+        
+        Args:
+            image_path: Path to the image file
+            output_path: Path to save the output markdown
+            
+        Raises:
+            ValueError: If the file is not an image
+            FileNotFoundError: If the image file doesn't exist
+        """
+        image_file = Path(image_path)
+        if not image_file.exists():
+            raise FileNotFoundError(f"Image file not found: {image_path}")
+        
+        if self.check_type_original_file(image_path) != 'image':
+            raise ValueError(f"File is not an image: {image_path}")
+        
+        output_file = Path(output_path)
+        output_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        markdown = ocr_document(
+            pdf_or_image_path=str(image_file),
+            base_url=os.getenv("OLLAMA_BASE_URL_LOCAL"),
+            api_key=os.getenv("OLLAMA_API_KEY"),
+            model=os.getenv("OLLAMA_MODEL")
+        )
+        
+        with open(output_file, 'w', encoding='utf-8') as f:
+            f.write(markdown)
+            
+        print(f'Markdown saved to {output_file}')
 
-# if __name__ == '__main__':
-#     load_document = LoadDocument()
-#     found_file = load_document.document_in_folder(
-#         folder_path=str(load_document.base_dir), 
-#         file_name='PDPA_thailand.pdf'
-#     )
-#     print(f"Found file: {found_file}")
-#     load_document.convert_pdf_to_image(
-#         pdf_path=str(load_document.pdf_path),
-#         output_path=str(load_document.output_path)
-#     )
+if __name__ == '__main__':
+    load_document = LoadDocument()
+    found_file = load_document.document_in_folder(
+        folder_path=str(load_document.base_dir), 
+        file_name='PDPA_thailand.pdf'
+    )
+    print(f"Found file: {found_file}")
+    load_document.convert_pdf_to_image(
+        pdf_path=str(load_document.pdf_path),
+        output_path=str(load_document.output_path)
+    )
