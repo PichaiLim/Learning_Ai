@@ -1,103 +1,197 @@
-import sys
+# import libraries
 import os
-from dotenv import load_dotenv
+import argparse
+import requests
+import json
+import fitz  # PyMuPDF
+
+# load ai model
+import ollama
+
+# load environment variables
+from typing import List, Dict, Optional
 from pathlib import Path
-from load_document import LoadDocument
+from dotenv import load_dotenv
 
-# Add parent directory to path to allow importing settings
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from settings import BASE_DIR
-
+# load environment variables
 load_dotenv()
 
-# TODO Ingestion PDF to Markdown
-class Ingestion:
-    def __init__(self):
-        self.load_document = LoadDocument()
-        self.pdf_path = self.load_document.pdf_path
-        self.output_path = self.load_document.output_path
 
-    ## 1. Convert PDF to Image
-    def convert_pdf_to_image(self):
-        print("convert pdf to image")
-        output_path = self.load_document.convert_pdf_to_image(
-            pdf_path=str(self.pdf_path),
-            output_path=str(self.output_path) # media/output/images
-        )
-        return output_path
+# ingestion.py
+## PDF -> Images (per page) -> OCR (Ollama Typhoon) -> Markdown per page + manifest.json
+# ensure directory exists
+def ensure_dir(path: str) -> None:
+    os.makedirs(path, exist_ok=True)
 
-    ## 2. Convert Image to Markdown
-    ### 2.1 OCR
-    def convert_image_to_raw_markdown(self, image_path: str):
-        """
-        Convert images in the given directory to raw markdown.
-        """
-        print("convert image to raw markdown")
-        image_dir = Path(image_path)
-        if not image_dir.exists():
-            raise FileNotFoundError(f"Image directory not found: {image_path}")
+### 1. PDF -> Images (per page)
+##### 1.1. open pdf
+def list_pdfs(input_dir: str) -> List[str]:
+    pdfs = []
+    for root, _, files in os.walk(input_dir):
+        for fn in files:
+            if fn.lower().endswith(".pdf"):
+                pdfs.append(os.path.join(root, fn))
+    return sorted(pdfs)
 
-        # Iterate over all images in the directory
-        for image_file in image_dir.glob('*.jpg') + image_dir.glob('*.jpeg') + image_dir.glob('*.png'):
-            print(f"Processing: {image_file.name}")
-            output_markdown_path = self.output_path / 'markdown' / 'raw_markdown' / f"{image_file.stem}.md"
-            
-            self.load_document.convert_image_to_raw_markdown(
-                image_path=str(image_file),
-                output_path=str(output_markdown_path)
-            )
+##### 1.2. render each page of PDF to image
+def pdf_to_images(pdf_path:str, out_dir:str, dpi:int=300, image_format:str="png",)-> List[Dict]:
+    """
+    Render each page of PDF to image.
+    Returns list of dict: {page, image_path, width, height}
+    """
+    ensure_dir(out_dir)
+    doc = fitz.open(pdf_path)
 
-    ### 2.2 Clean Markdown
+    zoom = dpi / 72 # PyMuPDF default is 72 dpi
+    mat = fitz.Matrix(zoom, zoom)
+
+    pages_info = [] # list()
+    if i in range(len(doc)):
+        page = doc.load_page(i) # 
+        pix = page.get_pixmap(matrix=mat, alpha=False)
+        image_path = os.path.join(out_dir, f"page_{i+1:03d}.{image_format}")
+        pix.save(image_path)
+
+        pages_info.append({
+            "page": i + 1,
+            "image_path": image_path,
+            "width": pix.width,
+            "height": pix.height,
+        })
+    
+    doc.close()
+    return pages_info
+
+##### 1.3. save image
+##### 1.4. return list of dict: {page, image_path, width, height}
+### 2. OCR (Ollama Typhoon)
+##### 2.1. call ollama generate API with an image to do OCR-like extraction
+def ocr_image_via_ollama(image_path:str, model:str=os.getenv("OLLAMA_MODEL"), ollama_url:str=os.getenv("OLLAMA_URL", "http://localhost:11434"), timeout_sec:int=120,)-> str:
+    """
+    Call Ollama generate API with an image to do OCR-like extraction.
+    Many vision models accept base64 images. We'll send base64 in 'images'.
+
+    IMPORTANT:
+    - Your typhoon model must support vision/OCR style input.
+    - If your model expects a different endpoint or schema, adjust here.
+    """
+    import base64
+    print(f"\n== image_path: {image_path}")
+
+    with open(image_path, "rb") as f:
+        img_b64 = base64.b64encode(f.read()).decode("utf-8")
+
+    """ markdown format
+    prompt = (
+        "อ่านข้อความในภาพนี้ทั้งหมด แล้วจัดรูปแบบเป็น Markdown ที่อ่านง่าย "
+        "คงหัวข้อ/รายการ/ตารางเท่าที่ทำได้ "
+        "ไม่ต้องอธิบายเพิ่ม และอย่าเติมข้อมูลที่ไม่มีในภาพ"
+    )
+
+    payload = {
+        "model": model,
+        "prompt": prompt,
+        "stream": False,
+        "images": [img_b64],
+    }
+    """
+
+    """ json format """
+    prompt = (
+        "อ่านข้อความในภาพนี้ทั้งหมด "
+        "แล้ว return เป็น JSON format ดังนี้เท่านั้น:\n"
+        "{\n"
+        '  "title": "หัวข้อหลักของเอกสาร",\n'
+        '  "content": "เนื้อหาทั้งหมดในภาพ",\n'
+        '  "tables": [],\n'
+        '  "lists": [],\n'
+        '  "pages": []\n'
+        "}\n"
+        "ห้าม return ข้อความอื่นนอกจาก JSON และอย่าเติมข้อมูลที่ไม่มีในภาพ"
+    )
+
+    # ✅ ใช้ Client เพื่อกำหนด timeout และ host
+    client = ollama.Client(
+        host=ollama_url,
+        timeout=timeout_sec,
+    )
+
+    response = client.chat(
+        model=model,
+        messages=[
+            {
+                "role": "user",
+                "content": prompt,
+                "images": [img_b64],  # ✅ ส่ง image ใน message
+            }
+        ],
+        format='json',
+        options={
+            "temperature": 0.1,
+            "top_p": 0.6,
+            "repeat_penalty": 1.1,  # ✅ Ollama ใช้ชื่อ repeat_penalty (ไม่ใช่ repetition_penalty)
+        }
+    )
+
+    # ✅ ดึง text จาก response ถูกต้อง
+    raw = response['message']['content']
+    return json.loads(raw)
+
+    
+##### 2.2. return text
+### 3. Markdown per page + manifest.json
+##### 3.1. save page OCR output as Markdown with metadata header
+##### 3.2. return list of dict: {page, image_path, width, height}
+
+def main():
+    print("Ingesting PDF to Markdown") # Title name
+    print("========================================"*5)
+
+    parser = argparse.ArgumentParser(description="Ingest PDF to Markdown")
+    # pdf
+    parser.add_argument("--input", default=str(Path(__file__).parent / 'media'), type=str, required=False, help="Input directory")
+    parser.add_argument("--output", default=str(Path(__file__).parent / 'data/raw'), type=str, required=False, help="Output directory")
+
+    # ollama
+    parser.add_argument("--image_path", default=str(Path(__file__).parent / 'media'/'output'/'images'/'page_1.jpeg'), type=str, required=False, help="Image path")
+    parser.add_argument("--ollama_url", default=os.getenv("OLLAMA_URL", "http://localhost:11434"), type=str, required=False, help="Ollama URL")
+    parser.add_argument("--model", default=os.getenv("OLLAMA_MODEL", "scb10x/typhoon-ocr1.5-3b"), type=str, required=False, help="Ollama model")
+    parser.add_argument("--timeout", default=120, type=int, required=False, help="Timeout in seconds")
+
+    args = parser.parse_args()
+
+    # list pdf
+    pdfs = list_pdfs(args.input)
+    if not pdfs:
+        print("No PDF files found in the input directory.")
+        return
+    
+    ensure_dir(args.output)
+    
+    all_results = [] # list()
+    for pdf_path in pdfs:
+        print(f"\n== Ingesting: {pdf_path}")
+        m = {
+            "pdf_path": pdf_path,
+            "output_root": args.output
+        }
+
+        all_results.append(m)
+
+    print(f"\n== Summary: {len(all_results)} PDFs ingested.")
+    print(f"\n== Results: {all_results}")
+
+    # ocr image via ollama
+    print("\n== ocr image via ollama")
+    ocr_result = ocr_image_via_ollama(
+        image_path=args.image_path,
+        model=args.model,
+        ollama_url=args.ollama_url,
+        timeout_sec=args.timeout,
+    )
+    print(f"\n== ocr_result: {ocr_result}")
+    
     
 
-    # def convert_pdf_to_image(self):
-    #     self.load_document.convert_pdf_to_image()
-
-    # def convert_image_to_markdown(self):
-    #     self.load_document.convert_image_to_markdown()
-
-    # def markdown_to_chunk(self):
-    #     self.load_document.markdown_to_chunk()
-
-    # def chunk_to_embedding(self):
-    #     self.load_document.chunk_to_embedding()
-
-    # def embedding_to_vector_store(self):
-    #     self.load_document.embedding_to_vector_store()
-
-    # def vector_store_to_retriever(self):
-    #     self.load_document.vector_store_to_retriever()
-
-    # def retriever_to_generator(self):
-    #     self.load_document.retriever_to_generator()
-
-    # def generator_to_evaluation(self):
-    #     self.load_document.generator_to_evaluation()
-
-
-
-
-
-
-
-# TODO Markdown to Chunk
-
-
-# TODO Chunk to Embedding
-
-
-# TODO Embedding to Vector Store
-
-
-# TODO Vector Store to Retriever
-
-
-# TODO Retriever to Generator
-
-
-# TODO Generator to Evaluation
-
-if __name__ == '__main__':
-    ingestion = Ingestion()
-    imgs = ingestion.convert_pdf_to_image()
-    ingestion.convert_image_to_raw_markdown(image_path=str(imgs / 'markdown' / 'raw_markdown'))
+if __name__ == "__main__":
+    main()
