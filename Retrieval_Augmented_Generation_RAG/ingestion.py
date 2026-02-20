@@ -81,13 +81,27 @@ def ocr_image_via_ollama(image_path:str, model:str=os.getenv("OLLAMA_MODEL"), ol
     with open(image_path, "rb") as f:
         img_b64 = base64.b64encode(f.read()).decode("utf-8")
 
-    """ markdown format
+    """ markdown format """
     prompt = (
-        "อ่านข้อความในภาพนี้ทั้งหมด แล้วจัดรูปแบบเป็น Markdown ที่อ่านง่าย "
-        "คงหัวข้อ/รายการ/ตารางเท่าที่ทำได้ "
-        "ไม่ต้องอธิบายเพิ่ม และอย่าเติมข้อมูลที่ไม่มีในภาพ"
-    )
+        "Instructions:\n"
+        "- Only return the clean Markdown.\n"
+        "- Do not include any explanation or extra text.\n"
+        "- You must include all information on the page.\n\n"
 
+        "Formatting Rules:\n"
+        "- Tables: Render tables using <table>...</table> in clean HTML format.\n"
+        "- Equations: Render equations using LaTeX syntax with inline ($...$) and block ($$...$$).\n"
+        "- Images/Charts/Diagrams: Wrap any clearly defined visual areas (e.g. charts, diagrams, pictures) in:\n\n"
+
+        "<figure>\n"
+        "Describe the image’s main elements (people, objects, text), note any contextual clues (place, event, culture), mention visible text and its meaning, provide deeper analysis when relevant (especially for financial charts, graphs, or documents), comment on style or architecture if relevant, then give a concise overall summary. Describe in Thai.\n"
+        "</figure>\n"
+
+        "- Page Numbers: Wrap page numbers in <page_number>...</page_number> (e.g., <page_number>14</page_number>).\n"
+        "- Checkboxes: Use ☐ for unchecked and ☑ for checked boxes.\n"
+    )
+    
+    """
     payload = {
         "model": model,
         "prompt": prompt,
@@ -97,7 +111,7 @@ def ocr_image_via_ollama(image_path:str, model:str=os.getenv("OLLAMA_MODEL"), ol
     """
 
     """ json format """
-    prompt = (
+    """prompt = (
         "อ่านข้อความในภาพนี้ทั้งหมด "
         "แล้ว return เป็น JSON format ดังนี้เท่านั้น:\n"
         "{\n"
@@ -109,33 +123,35 @@ def ocr_image_via_ollama(image_path:str, model:str=os.getenv("OLLAMA_MODEL"), ol
         "}\n"
         "ห้าม return ข้อความอื่นนอกจาก JSON และอย่าเติมข้อมูลที่ไม่มีในภาพ"
     )
+    """
 
     # ✅ ใช้ Client เพื่อกำหนด timeout และ host
     client = ollama.Client(
-        host=ollama_url,
-        timeout=timeout_sec,
+        host=ollama_url, # ✅ กำหนด host
+        timeout=timeout_sec, # ✅ กำหนด timeout
     )
 
     response = client.chat(
         model=model,
         messages=[
             {
-                "role": "user",
-                "content": prompt,
+                "role": "user", # ✅ กำหนด role
+                "content": prompt, # ✅ ส่ง prompt ใน message
                 "images": [img_b64],  # ✅ ส่ง image ใน message
             }
         ],
-        format='json',
+        # format='json', # ✅ ไม่ต้องใช้ format='json' เพราะเราส่ง markdown format
         options={
-            "temperature": 0.1,
-            "top_p": 0.6,
-            "repeat_penalty": 1.1,  # ✅ Ollama ใช้ชื่อ repeat_penalty (ไม่ใช่ repetition_penalty)
+            "temperature": os.getenv("temperature", 0.1), # ✅ กำหนด temperature 0.1
+            "top_p": os.getenv("top_p", 0.6), # ✅ กำหนด top_p 0.6
+            "repeat_penalty": os.getenv("repeat_penalty", 1.1), # ✅ กำหนด repeat_penalty 1.1
+            "top_k": os.getenv("top_k", 40), # ✅ กำหนด top_k 40
+            "max_tokens": os.getenv("max_tokens", 1000), # ✅ กำหนด max_tokens 1000
         }
     )
 
-    # ✅ ดึง text จาก response ถูกต้อง
-    raw = response['message']['content']
-    return json.loads(raw)
+    # ✅ ดึง text จาก response ถูกต้อง markdown format
+    return response.message.content
 
     
 ##### 2.2. return text
@@ -173,7 +189,7 @@ def main():
         print(f"\n== Ingesting: {pdf_path}")
         m = {
             "pdf_path": pdf_path,
-            "output_root": args.output
+            "output_root": args.output,
         }
 
         all_results.append(m)
