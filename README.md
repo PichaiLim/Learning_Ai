@@ -22,6 +22,8 @@ ollama list -> show model
 ollama pull <model> -> load model
 ollama run <model> -> run model
 ollama rm <model> -> remove model
+## show old modelfile markdown
+ollama show <model> --modelfile > Modelfile_typhoon 
 
 ## load model
 ollama run qwen3:4b
