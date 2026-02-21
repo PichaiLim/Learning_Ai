@@ -66,6 +66,7 @@ def pdf_to_images(pdf_path:str, out_dir:str, dpi:int=300, image_format:str="png"
 ##### 1.4. return list of dict: {page, image_path, width, height}
 ### 2. OCR (Ollama Typhoon)
 ##### 2.1. call ollama generate API with an image to do OCR-like extraction
+##### 2.2. return text markdown
 def ocr_image_via_ollama(image_path:str, model:str=os.getenv("OLLAMA_MODEL"), ollama_url:str=os.getenv("OLLAMA_URL", "http://localhost:11434"), timeout_sec:int=120,)-> str:
     """
     Call Ollama generate API with an image to do OCR-like extraction.
@@ -153,8 +154,26 @@ def ocr_image_via_ollama(image_path:str, model:str=os.getenv("OLLAMA_MODEL"), ol
     # ✅ ดึง text จาก response ถูกต้อง markdown format
     return response.message.content
 
-    
-##### 2.2. return text
+def write_page_markdown(output_path:str, test:str, metadata:Dict)->None:
+    """
+    Write page markdown to file.
+    Save page OCR output as Markdown with metadata header.
+    """
+    header = (
+        "<!--\n"
+        + "\n".join([f"{k}: {v}" for k, v in metadata.items()])
+        + "\n-->\n\n"
+    )
+
+    with open(output_path, "w", encoding="utf-8") as f:
+        f.write(header)
+        f.write(text)
+        f.write("\n")
+
+def write_manifest(out_path: str, manifest: Dict) -> None:
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, ensure_ascii=False, indent=2)
+        
 ### 3. Markdown per page + manifest.json
 ##### 3.1. save page OCR output as Markdown with metadata header
 ##### 3.2. return list of dict: {page, image_path, width, height}
