@@ -127,7 +127,7 @@ def ocr_image_via_ollama(image_path:str, model:str=os.getenv("OLLAMA_MODEL"), ol
     - If your model expects a different endpoint or schema, adjust here.
     """
     import base64
-    # print(f"\n== image_path: {image_path}")
+    print(f"\n== image_path: {image_path}")
 
     with open(image_path, "rb") as f:
         img_b64 = base64.b64encode(f.read()).decode("utf-8")
@@ -334,6 +334,7 @@ def ingest_pdf(pdf_path:str, output_root:str, model:str, dpi:int=300, ollama_url
                     print(f"   Page {page_no}: GGML error at {dim_label}, retrying with max {next_dim}px...")
                     continue
                 else:
+                    print(f"   Page {page_no}: non-GGML error or last retry, give up")
                     break  # non-GGML error or last retry, give up
 
         if not success:
