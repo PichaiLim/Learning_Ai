@@ -1,6 +1,7 @@
 # In Local
 Retrieval_Augmented_Generation_RAG/media/output/images/*
 Retrieval_Augmented_Generation_RAG/media/output/markdown/*
+Retrieval_Augmented_Generation_RAG/data/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
