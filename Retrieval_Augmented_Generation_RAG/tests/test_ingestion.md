@@ -32,3 +32,33 @@ cd "c:\Users\Public\Public Programs\Learning_Ai\Retrieval_Augmented_Generation_R
 python -m unittest discover -s tests -p "test_ingestion.py" -v
 ```
 
+
+----
+---
+
+## Task
+### Create Unit Tests for ingestion.py
+
+### Planning
+ - [/] Read [ingestion.py](../ingestion.py) to identify all testable functions
+ - [/] Review existing test patterns in [tests/](tests/) directory
+ - [/] Write implementation plan
+ - [/] Get user approval
+
+### Execution
+ - [/] Create [tests/test_ingestion.py](test_ingestion.py) with unit tests for:
+    - [/] now_iso_bkk()
+    - [/] ensure_dir()
+    - [/] slugify_filename()
+    - [/] sha1_of_file()
+    - [/] list_pdfs()
+    - [/] pdf_to_images()
+    - [/] resize_image()
+    - [/] ocr_image_via_ollama()
+    - [/] write_page_markdown()
+    - [/] write_manifest()
+    - [/] ingest_pdf()
+    - [/] main()
+
+### Verification
+ - [/] Run unit tests and verify all pass ✅ (33 tests, 0.088s)
