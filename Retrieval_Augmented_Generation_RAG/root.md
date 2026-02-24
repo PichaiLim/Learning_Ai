@@ -1,5 +1,5 @@
 # RAG Pipeline
- 1) [-] ingestion.py        → ได้ raw .md
+ 1) [/] ingestion.py        → ได้ raw .md
  2) [-] preprocessing.py    → ได้ clean .md   
  3) [-] chunking.py
  4) [-] embedding.py
