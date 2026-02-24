@@ -334,7 +334,7 @@ def ingest_pdf(pdf_path:str, output_root:str, model:str, dpi:int=300, ollama_url
                     print(f"   Page {page_no}: GGML error at {dim_label}, retrying with max {next_dim}px...")
                     continue
                 else:
-                    print(f"   Page {page_no}: non-GGML error or last retry, give up")
+                    # print(f"   Page {page_no}: non-GGML error or last retry, give up")
                     break  # non-GGML error or last retry, give up
 
         if not success:
