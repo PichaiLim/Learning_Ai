@@ -117,7 +117,7 @@ def resize_image(image_path:str, max_dim:int=1024) -> str:
     img_resized.save(resized_path)
     return resized_path
 
-def ocr_image_via_ollama(image_path:str, model:str=os.getenv("OLLAMA_MODEL"), ollama_url:str=os.getenv("OLLAMA_URL", "http://localhost:11434"), timeout_sec:int=120,)-> str:
+def ocr_image_via_ollama(image_path:str, model:str=os.getenv("OLLAMA_MODEL"), ollama_url:str=os.getenv("OLLAMA_URL", "http://localhost:11434"), timeout_sec:int=os.getenv("OLLAMA_TIMEOUT", 120),)-> str:
     """
     Call Ollama generate API with an image to do OCR-like extraction.
     Many vision models accept base64 images. We'll send base64 in 'images'.
@@ -394,7 +394,7 @@ def main():
     parser.add_argument("--image_path", default=str(Path(__file__).parent / 'media'/'output'/'images'/'page_1.jpeg'), type=str, required=False, help="Image path")
     parser.add_argument("--ollama_url", default=os.getenv("OLLAMA_URL", "http://localhost:11434"), type=str, required=False, help="Ollama URL")
     parser.add_argument("--model", default=os.getenv("OLLAMA_MODEL", "scb10x/typhoon-ocr1.5-3b"), type=str, required=False, help="Ollama model")
-    parser.add_argument("--timeout", default=120, type=int, required=False, help="Timeout in seconds")
+    parser.add_argument("--timeout", default=os.getenv("OLLAMA_TIMEOUT", 120), type=int, required=False, help="Timeout in seconds")
     parser.add_argument("--dpi", type=int, default=150)
     parser.add_argument("--sleep_sec", type=float, default=0.0, help="Sleep between pages (sec)")
 
