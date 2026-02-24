@@ -560,7 +560,12 @@ def chunk_document_dir(
 # -------------------------
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--doc-dir", required=True, help="Path to doc folder (contains manifest.json)")
+    ap.add_argument(
+        "--doc-dir", 
+        required=False, 
+        help="Path to doc folder (contains manifest.json)", 
+        default=str(os.path.join(os.path.dirname(__file__), "data", "raw", "PDPA_thailand_ef58d853"))
+        )
     ap.add_argument(
         "--mode",
         default="headings",
