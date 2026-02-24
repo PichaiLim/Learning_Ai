@@ -1,11 +1,11 @@
 # RAG Pipeline
- 1) [/] ingestion.py        → ได้ raw .md
- 2) [-] preprocessing.py    → ได้ clean .md   
- 3) [-] chunking.py
- 4) [-] embedding.py
- 5) [-] vector_store.py
- 6) [-] retriever.py
- 7) [-] generator.py
+ 1) [/] ingestion.py        → ได้ raw file [ingestion.md](ingestion.md)
+ 2) [-] preprocessing.py    → ได้ clean.md   
+ 3) [-] chunking.py         → ได้ chunked.md
+ 4) [-] embedding.py        → ได้ embedding.md
+ 5) [-] vector_store.py     → ได้ vector_store.md
+ 6) [-] retriever.py        → ได้ retriever.md
+ 7) [-] generator.py        → ได้ generator.md
 
 ---
 
