@@ -4,7 +4,7 @@
 
 ---
 
-## 1) `ingestion.py` — ดึงข้อมูลเข้า + แปลงเป็น Raw
+## 1) [ingestion.py](ingestion.py) — ดึงข้อมูลเข้า + แปลงเป็น Raw
 
 **หน้าที่**
 - อ่านไฟล์ต้นทาง เช่น PDF / DOCX / HTML / TXT
@@ -16,7 +16,7 @@
 
 ---
 
-## 2) `preprocessing.py` — ทำความสะอาด + ทำให้เป็นมาตรฐาน (Clean)
+## 2) [preprocessing.py](preprocessing.py) — ทำความสะอาด + ทำให้เป็นมาตรฐาน (Clean)
 
 **หน้าที่**
 - ลบสิ่งรบกวน: header/footer ซ้ำ ๆ, เลขหน้า, watermark
@@ -28,7 +28,7 @@
 
 ---
 
-## 3) `chunking.py` — หั่นเอกสารเป็นชิ้น ๆ (Chunks)
+## 3) [chunking.py](chunking.py) — หั่นเอกสารเป็นชิ้น ๆ (Chunks)
 
 **หน้าที่**
 - แบ่ง `clean.md` เป็น “chunk” ขนาดพอเหมาะสำหรับ embedding/retrieval
@@ -41,7 +41,7 @@
 
 ---
 
-## 4) `embedding.py` — แปลง chunk เป็นเวกเตอร์ (Vectors)
+## 4) [embedding.py](embedding.py) — แปลง chunk เป็นเวกเตอร์ (Vectors)
 
 **หน้าที่**
 - ส่งข้อความของแต่ละ chunk เข้า embedding model
@@ -52,7 +52,7 @@
 
 ---
 
-## 5) `vector_store.py` — ที่เก็บ/ดัชนีเวกเตอร์
+## 5) [vector_store.py](vector_store.py) — ที่เก็บ/ดัชนีเวกเตอร์
 
 **หน้าที่**
 - บันทึกเวกเตอร์ + metadata ลงฐานข้อมูลเวกเตอร์  
@@ -64,7 +64,7 @@
 
 ---
 
-## 6) `retriever.py` — ตัวค้นคืน (Search/Recall)
+## 6) [retriever.py](retriever.py) — ตัวค้นคืน (Search/Recall)
 
 **หน้าที่**
 - รับคำถามผู้ใช้ → สร้าง query embedding
@@ -76,7 +76,7 @@
 
 ---
 
-## 7) `generator.py` — ตัวตอบ (LLM Answering)
+## 7) [generator.py](generator.py) — ตัวตอบ (LLM Answering)
 
 **หน้าที่**
 - เอา “คำถาม + context ที่ retrieve มา” ป้อนเข้า LLM
@@ -91,11 +91,11 @@
 ## ภาพรวมการไหลของข้อมูล (Data Flow)
 
 ต้นทางเอกสาร  
-→ `ingestion` (raw)  
-→ `preprocessing` (clean)  
-→ `chunking` (chunks)  
-→ `embedding` (vectors)  
-→ `vector_store` (index/db)  
-→ `retriever` (top-k context)  
-→ `generator` (answer)
+→ [ingestion.py](ingestion.py) (raw)  
+→ [preprocessing.py](preprocessing.py) (clean)  
+→ [chunking.py](chunking.py) (chunks)  
+→ [embedding.py](embedding.py) (vectors)  
+→ [vector_store.py](vector_store.py) (index/db)  
+→ [retriever.py](retriever.py) (top-k context)  
+→ [generator.py](generator.py) (answer)
 

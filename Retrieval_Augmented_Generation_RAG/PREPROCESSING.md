@@ -60,7 +60,7 @@ Preprocessing คือขั้นตอน “ทำความสะอา�
 
 ## 3) Output ที่ได้จาก Preprocessing
 
-เมื่อรัน `preprocessing.py` จะได้:
+เมื่อรัน [preprocessing.py](preprocessing.py) จะได้:
 
 ```
 data/raw/<doc_id>/
@@ -71,7 +71,7 @@ data/raw/<doc_id>/
   preprocess_manifest.json
 ```
 
-ตัวอย่างไฟล์ผลลัพธ์ `clean_pages_md/page_001.md`:
+ตัวอย่างไฟล์ผลลัพธ์ [clean_pages_md/page_001.md](clean_pages_md/page_001.md):
 
 ```md
 <!--
