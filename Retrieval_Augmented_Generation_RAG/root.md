@@ -31,7 +31,7 @@
 
 - ทางเลือกยอดฮิต:
 - PostgreSQL + pgvector (เหมาะกับคุณมาก เพราะคุณใช้ PostgreSQL 17 อยู่แล้ว)
-- หรือ FAISS/Chroma (ง่ายและเร็วสำหรับต้นแบบ)
+- หรือ FAISS/Chroma (ง่ายและเร็วสำหรับต้นแบบ) 
 
 ## Step E — Retriever: ดึง chunk ที่เกี่ยวข้อง
 
