@@ -1,37 +1,90 @@
-version: '3.8'
+version: "3.9"
+
+# ============================================================
+# Docker Compose สำหรับ LLM RAG + PostgreSQL (pgvector)
+# ============================================================
+# วิธีใช้:
+#   1. cp .env.example .env  แล้วแก้ค่าใน .env
+#   2. docker compose up -d --build
+#   3. docker compose logs -f app
 
 services:
+
+  # ─── PostgreSQL + pgvector ───────────────────────────────
+  db:
+    image: pgvector/pgvector:pg16        # มี pgvector built-in สำหรับ RAG
+    container_name: rag_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data   # persistent storage
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # init script (optional)
+    ports:
+      - "5432:5432"                              # เปิดเฉพาะตอน dev, ปิดใน prod
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - rag_network
+
+  # ─── RAG Application ─────────────────────────────────────
   app:
     build:
       context: .
       dockerfile: Dockerfile
-    image: learning-ai:latest
-    container_name: learning-ai-app
-
-    # Environment variables
-    env_file:
-      - .env
-
-    # Volumes for development (optional - uncomment if needed)
-    # volumes:
-    #   - .:/app
-    #   - /app/__pycache__
-
-    # Keep container running for interactive use
-    stdin_open: true
-    tty: true
-
-    # Restart policy
+    container_name: rag_app
     restart: unless-stopped
-    # Network mode (optional)
-    # network_mode: bridge
+    env_file:
+      - .env                                     # โหลด .env จาก host (ไม่ได้ copy เข้า image)
+    environment:
+      # Override หรือเพิ่ม env ที่ต้องการ
+      DATABASE_URL: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy             # รอให้ DB พร้อมก่อน
+    networks:
+      - rag_network
+    volumes:
+      # Mount โฟลเดอร์ที่ต้องการ hot-reload ตอน dev (ลบออกตอน prod)
+      - ./src:/app/src
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 3
 
-    # Resource limits (optional)
-    # deploy:
-    #   resources:
-    #     limits:
-    #       cpus: '2'
-    #       memory: 2G
-    #     reservations:
-    #       cpus: '1'
-    #       memory: 1G
+  # ─── pgAdmin (Optional - สำหรับ manage DB ผ่าน UI) ───────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: rag_pgadmin
+    restart: unless-stopped
+    profiles:
+      - tools                                    # เปิดใช้เฉพาะเมื่อ: docker compose --profile tools up
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+    networks:
+      - rag_network
+
+# ─── Volumes ───────────────────────────────────────────────
+volumes:
+  postgres_data:
+    name: rag_postgres_data
+
+# ─── Networks ──────────────────────────────────────────────
+networks:
+  rag_network:
+    name: rag_network
+    driver: bridge

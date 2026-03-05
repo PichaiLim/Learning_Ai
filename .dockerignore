@@ -1,67 +1,76 @@
-# Git files
-.git
+# Environment files - ห้ามเข้า Docker เด็ดขาด
+.env
+.env.*
+!.env.example
+
+# Images / Media
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.svg
+*.webp
+*.ico
+*.tiff
+images/
+imgs/
+assets/images/
+static/images/
+
+# Markdown docs
+*.md
+!README.md  # ถ้าอยากเอา README เข้าไปด้วยให้ลบบรรทัดนี้
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env_folder/
+
+# Jupyter Notebooks (ถ้าไม่ต้องการ)
+*.ipynb
+.ipynb_checkpoints/
+
+# Git
+.git/
 .gitignore
 .gitattributes
 
-# Python
-__pycache__
-*.py[cod]
-*$py.class
-*.so
-.Python
-*.egg-info
-dist
-build
-*.egg
-.pytest_cache
-.coverage
-htmlcov
-
-# Virtual environments
-venv
-env
-ENV
-.venv
-
-# IDE
-.vscode
-.idea
+# IDE / Editor
+.vscode/
+.idea/
 *.swp
 *.swo
-*~
 .DS_Store
-
-# Environment files
-.env
-.env.local
-.env.*.local
-
-# Documentation
-README.md
-*.md
-docs
-
-# CI/CD
-.github
-.gitlab-ci.yml
-.travis.yml
-
-# Docker
-Dockerfile
-docker-compose.yml
-.dockerignore
+Thumbs.db
 
 # Logs
 *.log
-logs
+logs/
 
-# Testing
-.pytest_cache
-.tox
-.coverage
-htmlcov
+# Test files
+tests/
+test_*
+*_test.py
 
-# Other
-*.bak
-*.tmp
-.cache
+# Docker ตัวเอง
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Data / Vector store local (ถ้ามี)
+data/
+chroma_db/
+faiss_index/
